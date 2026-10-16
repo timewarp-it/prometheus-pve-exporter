@@ -1,12 +1,13 @@
 """
-Prometheus collecters for Proxmox VE cluster.
+Prometheus collectors for Proxmox VE cluster.
 """
+
 # pylint: disable=too-few-public-methods
 
 import itertools
 import typing
 
-from prometheus_client.core import GaugeMetricFamily, CounterMetricFamily
+from prometheus_client.core import CounterMetricFamily, GaugeMetricFamily
 from proxmoxer import ResourceException
 
 
@@ -27,9 +28,8 @@ class StatusCollector:
 
     def collect(self):  # pylint: disable=missing-docstring
         status_metrics = GaugeMetricFamily(
-            'pve_up',
-            'Node/VM/CT-Status is online/running',
-            labels=['id'])
+            'pve_up', 'Node/VM/CT-Status is online/running', labels=['id']
+        )
 
         for entry in self._pve.cluster.status.get():
             if entry['type'] == 'node':
@@ -68,13 +68,13 @@ class VersionCollector:
 
     def collect(self):  # pylint: disable=missing-docstring
         version_items = self._pve.version.get().items()
-        version = {key: value for key, value in version_items if key in self.LABEL_WHITELIST}
+        version = {
+            key: value for key, value in version_items if key in self.LABEL_WHITELIST
+        }
 
         labels, label_values = zip(*version.items())
         metric = GaugeMetricFamily(
-            'pve_version_info',
-            'Proxmox VE version info',
-            labels=labels
+            'pve_version_info', 'Proxmox VE version info', labels=labels
         )
         metric.add_metric(label_values, 1)
 
@@ -95,14 +95,15 @@ class ClusterNodeCollector:
         self._pve = pve
 
     def collect(self):  # pylint: disable=missing-docstring
-        nodes = [entry for entry in self._pve.cluster.status.get() if entry['type'] == 'node']
+        nodes = [
+            entry for entry in self._pve.cluster.status.get() if entry['type'] == 'node'
+        ]
         labels = ['id', 'level', 'name', 'nodeid']
 
         if nodes:
             info_metrics = GaugeMetricFamily(
-                'pve_node_info',
-                'Node info',
-                labels=labels)
+                'pve_node_info', 'Node info', labels=labels
+            )
 
             for node in nodes:
                 label_values = [str(node[key]) for key in labels]
@@ -124,7 +125,11 @@ class ClusterInfoCollector:
         self._pve = pve
 
     def collect(self):  # pylint: disable=missing-docstring
-        clusters = [entry for entry in self._pve.cluster.status.get() if entry['type'] == 'cluster']
+        clusters = [
+            entry
+            for entry in self._pve.cluster.status.get()
+            if entry['type'] == 'cluster'
+        ]
 
         if clusters:
             # Remove superflous keys.
@@ -139,9 +144,8 @@ class ClusterInfoCollector:
             # Yield remaining data.
             labels = clusters[0].keys()
             info_metrics = GaugeMetricFamily(
-                'pve_cluster_info',
-                'Cluster info',
-                labels=labels)
+                'pve_cluster_info', 'Cluster info', labels=labels
+            )
 
             for cluster in clusters:
                 label_values = [str(cluster[key]) for key in labels]
@@ -204,13 +208,15 @@ class QDeviceCollector:
         info_metric = GaugeMetricFamily(
             'pve_qdevice_info',
             'Proxmox VE QDevice info (1 if configured)',
-            labels=label_names)
+            labels=label_names,
+        )
         info_metric.add_metric(label_values, 1)
 
         up_metric = GaugeMetricFamily(
             'pve_qdevice_up',
             'Proxmox VE QDevice is connected (1) or not (0)',
-            labels=['id'])
+            labels=['id'],
+        )
         up_metric.add_metric([cluster_id], qdevice.get('State') == 'Connected')
 
         yield up_metric
@@ -248,7 +254,7 @@ class HighAvailabilityStateMetric(GaugeMetricFamily):
         super().__init__(
             'pve_ha_state',
             'HA service status (for HA managed VMs).',
-            labels=['id', 'state']
+            labels=['id', 'state'],
         )
 
     def add_metric_from_resource(self, resource: dict):
@@ -290,7 +296,7 @@ class LockStateMetric(GaugeMetricFamily):
         super().__init__(
             'pve_lock_state',
             "The guest's current config lock (for types 'qemu' and 'lxc')",
-            labels=['id', 'state']
+            labels=['id', 'state'],
         )
 
     def add_metric_from_resource(self, resource: dict):
@@ -323,22 +329,26 @@ class ClusterResourcesCollector:
                     "Storage size in bytes (for type 'storage'), root image size for VMs "
                     "(for types 'qemu' and 'lxc')."
                 ),
-                labels=['id']),
+                labels=['id'],
+            ),
             'disk': GaugeMetricFamily(
                 'pve_disk_usage_bytes',
                 (
                     "Used disk space in bytes (for type 'storage'), used root image space for VMs "
                     "(for types 'qemu' and 'lxc')."
                 ),
-                labels=['id']),
+                labels=['id'],
+            ),
             'maxmem': GaugeMetricFamily(
                 'pve_memory_size_bytes',
                 "Number of available memory in bytes (for types 'node', 'qemu' and 'lxc').",
-                labels=['id']),
+                labels=['id', 'name'],
+            ),
             'mem': GaugeMetricFamily(
                 'pve_memory_usage_bytes',
                 "Used memory in bytes (for types 'node', 'qemu' and 'lxc').",
-                labels=['id']),
+                labels=['id', 'name'],
+            ),
             'netout': GaugeMetricFamily(
                 'pve_network_transmit_bytes',
                 (
@@ -346,7 +356,8 @@ class ClusterResourcesCollector:
                     "since it was started. (for types 'qemu' and 'lxc') "
                     "DEPRECATED: Use pve_network_transmit_bytes_total instead."
                 ),
-                labels=['id']),
+                labels=['id', 'name'],
+            ),
             'netin': GaugeMetricFamily(
                 'pve_network_receive_bytes',
                 (
@@ -354,7 +365,8 @@ class ClusterResourcesCollector:
                     "since it was started. (for types 'qemu' and 'lxc') "
                     "DEPRECATED: Use pve_network_receive_bytes_total instead."
                 ),
-                labels=['id']),
+                labels=['id', 'name'],
+            ),
             'diskwrite': GaugeMetricFamily(
                 'pve_disk_write_bytes',
                 (
@@ -363,7 +375,8 @@ class ClusterResourcesCollector:
                     "(for types 'qemu' and 'lxc') "
                     "DEPRECATED: Use pve_disk_written_bytes_total instead."
                 ),
-                labels=['id']),
+                labels=['id', 'name'],
+            ),
             'diskread': GaugeMetricFamily(
                 'pve_disk_read_bytes',
                 (
@@ -372,23 +385,28 @@ class ClusterResourcesCollector:
                     "(for types 'qemu' and 'lxc') "
                     "DEPRECATED: Use pve_disk_read_bytes_total instead."
                 ),
-                labels=['id']),
+                labels=['id', 'name'],
+            ),
             'cpu': GaugeMetricFamily(
                 'pve_cpu_usage_ratio',
                 "CPU utilization (for types 'node', 'qemu' and 'lxc').",
-                labels=['id']),
+                labels=['id', 'name'],
+            ),
             'maxcpu': GaugeMetricFamily(
                 'pve_cpu_usage_limit',
                 "Number of available CPUs (for types 'node', 'qemu' and 'lxc').",
-                labels=['id']),
+                labels=['id', 'name'],
+            ),
             'uptime': GaugeMetricFamily(
                 'pve_uptime_seconds',
                 "Uptime of node or virtual guest in seconds (for types 'node', 'qemu' and 'lxc').",
-                labels=['id']),
+                labels=['id', 'name'],
+            ),
             'shared': GaugeMetricFamily(
                 'pve_storage_shared',
-                'Whether or not the storage is shared among cluster nodes',
-                labels=['id']),
+                "Whether or not the storage is shared among cluster nodes",
+                labels=['id'],
+            ),
         }
 
         counter_metrics = {
@@ -398,14 +416,16 @@ class ClusterResourcesCollector:
                     "The amount of traffic in bytes that was sent from the guest over the network "
                     "since it was started. (for types 'qemu' and 'lxc')"
                 ),
-                labels=['id']),
+                labels=['id', 'name'],
+            ),
             'netin': CounterMetricFamily(
                 'pve_network_receive_bytes_total',
                 (
                     "The amount of traffic in bytes that was sent to the guest over the network "
                     "since it was started. (for types 'qemu' and 'lxc')"
                 ),
-                labels=['id']),
+                labels=['id', 'name'],
+            ),
             'diskwrite': CounterMetricFamily(
                 'pve_disk_written_bytes_total',
                 (
@@ -413,7 +433,8 @@ class ClusterResourcesCollector:
                     "started. This info is not available for all storage types. "
                     "(for types 'qemu' and 'lxc')"
                 ),
-                labels=['id']),
+                labels=['id', 'name'],
+            ),
             'diskread': CounterMetricFamily(
                 'pve_disk_read_bytes_total',
                 (
@@ -421,7 +442,8 @@ class ClusterResourcesCollector:
                     "started. This info is not available for all storage types. "
                     "(for types 'qemu' and 'lxc')"
                 ),
-                labels=['id']),
+                labels=['id', 'name'],
+            ),
         }
 
         ha_metric = HighAvailabilityStateMetric()
@@ -430,12 +452,14 @@ class ClusterResourcesCollector:
         info_metrics = {
             'guest': GaugeMetricFamily(
                 'pve_guest_info',
-                'VM/CT info',
-                labels=['id', 'node', 'name', 'type', 'template', 'tags']),
+                "VM/CT info",
+                labels=['id', 'node', 'name', 'type', 'template', 'tags'],
+            ),
             'storage': GaugeMetricFamily(
                 'pve_storage_info',
                 'Storage info',
-                labels=['id', 'node', 'storage', 'plugintype', 'content']),
+                labels=['id', 'node', 'storage', 'plugintype', 'content'],
+            ),
         }
 
         info_lookup = {
@@ -458,13 +482,22 @@ class ClusterResourcesCollector:
             restype = resource['type']
 
             if restype in info_lookup:
-                all_labels = self._extract_resource_labels(info_lookup[restype], resource)
+                all_labels = self._extract_resource_labels(
+                    info_lookup[restype], resource
+                )
                 info_lookup[restype]['gauge'].add_metric(all_labels, 1)
 
             ha_metric.add_metric_from_resource(resource)
             lock_metric.add_metric_from_resource(resource)
 
-            label_values = [resource['id']]
+            label_values = [
+                resource['id'],
+            ]
+            if restype in info_lookup:
+                label_values += [
+                    # Index 2 contains the resources name e.g vmname, nodename lxcname
+                    self._extract_resource_labels(info_lookup[restype], resource)[2]
+                ]
             for key, metric_value in resource.items():
                 if key in metrics:
                     metrics[key].add_metric(label_values, metric_value)
@@ -475,19 +508,21 @@ class ClusterResourcesCollector:
             metrics.values(),
             counter_metrics.values(),
             [ha_metric, lock_metric],
-            info_metrics.values()
+            info_metrics.values(),
         )
 
-    def _extract_resource_labels(self, resource_lookup_info: dict[str, typing.Any],
-                                 api_response_resource: dict[str, typing.Any]) -> list[str]:
+    def _extract_resource_labels(
+        self,
+        resource_lookup_info: dict[str, typing.Any],
+        api_response_resource: dict[str, typing.Any],
+    ) -> list[str]:
         """Extract resource labels from the PVE API response.
 
         Returns:
             list[str]: A list of labels.
         """
         labels = resource_lookup_info['labels']
-        label_values = [str(api_response_resource.get(key, ''))
-                        for key in labels]
+        label_values = [str(api_response_resource.get(key, '')) for key in labels]
 
         # Labels with comma-separated values are randomly ordered by
         # Proxmox. This causes different metrics on every scrape, which
@@ -507,6 +542,7 @@ class ClusterResourcesCollector:
 
         return label_values + csv_label_values
 
+
 class BackupInfoCollector:
     """
     Collects information on guests which are not covered by any backup job. E.g.:
@@ -522,12 +558,12 @@ class BackupInfoCollector:
         not_enabled_total = GaugeMetricFamily(
             'pve_not_backed_up_total',
             'Total number of guests not covered by any backup job.',
-            labels=['id']
+            labels=['id'],
         )
         not_enabled_info = GaugeMetricFamily(
             'pve_not_backed_up_info',
             'Present if guest is not covered by any backup job.',
-            labels=['id']
+            labels=['id'],
         )
 
         not_enabled_data = self._pve.cluster("backup-info/not-backed-up").get()
@@ -537,10 +573,7 @@ class BackupInfoCollector:
             label_values = [f"{entry['type']}/{entry['vmid']}"]
             not_enabled_info.add_metric(label_values, 1)
 
-        not_enabled_total.add_metric(
-            [f"cluster/{cluster_name}"],
-            len(not_enabled_data)
-        )
+        not_enabled_total.add_metric([f"cluster/{cluster_name}"], len(not_enabled_data))
 
         yield not_enabled_total
         yield not_enabled_info
