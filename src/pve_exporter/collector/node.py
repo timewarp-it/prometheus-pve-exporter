@@ -86,7 +86,7 @@ class NodeConfigCollector:
         The regex below checks if the given string is a disk 
         and replaces the string with <disk>
         """
-        return re.sub(r'(efidisk|sata|ide|virtio)([0-3])', 'disk', raw_metric_name)
+        return re.sub(r'(scsi|efidisk|sata|ide|virtio)([0-3])', 'disk', raw_metric_name)
 
     def value_to_dict(self, proxmox_value_string) -> dict[str, str]:
         """
