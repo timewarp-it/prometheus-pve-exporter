@@ -20,6 +20,7 @@ jobs:
           release-type: python
   build:
     runs-on: ubuntu-latest
+    needs: ["release-please"]
     if: success()
     steps:
       - name: Checkout code
