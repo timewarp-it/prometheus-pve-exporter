@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.11.1](https://github.com/timewarp-it/prometheus-pve-exporter/compare/v3.11.0...v3.11.1) (2026-10-27)
+
+
+### Bug Fixes
+
+* **ci:** build ci job after release please ([ae34070](https://github.com/timewarp-it/prometheus-pve-exporter/commit/ae340708f38af31b3abaea032cbd37b987f7c8a1))
+* **node:** update regex to include missing disk type ([06bc941](https://github.com/timewarp-it/prometheus-pve-exporter/commit/06bc941739051f51d174681d95d72d1c754eb477))
+
 ## [3.11.0](https://github.com/timewarp-it/prometheus-pve-exporter/compare/v3.10.1...v3.11.0) (2026-10-27)
 
 
