@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.11.2](https://github.com/timewarp-it/prometheus-pve-exporter/compare/v3.11.1...v3.11.2) (2026-10-27)
+
+
+### Bug Fixes
+
+* **ci:** actually attach whl to release now ([4fd48b7](https://github.com/timewarp-it/prometheus-pve-exporter/commit/4fd48b7bb9c9db976a418ec2df71d24b104e873c))
+
 ## [3.11.1](https://github.com/timewarp-it/prometheus-pve-exporter/compare/v3.11.0...v3.11.1) (2026-10-27)
 
 
