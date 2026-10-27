@@ -21,7 +21,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: ["release-please"]
-    if: success()
+    if: ${{ needs.release-please.outputs.release_created == 'true' }}
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -40,4 +40,4 @@ jobs:
       - name: Upload wheel to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ steps.release.outputs.tag_name }} dist/*.whl
+        run: gh release upload ${{ needs.release-please.outputs.tag_name }} dist/*.whl
